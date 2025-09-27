@@ -2,12 +2,12 @@
 
 AVRマイコンでwavファイルを鳴らすプログラム。
 
-AVR Studio 6.2で作りました。
+Atmel Studio 6.2で作りました。
 
 # Parts
-ATmega168/328P
+・ATmega168/328P
 
-Speaker
+・Speaker
 
 # movie
 https://www.youtube.com/watch?v=yaILELeem6M
