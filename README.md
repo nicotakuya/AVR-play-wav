@@ -1,6 +1,6 @@
 # AVR play wav
 
-AVR舞昆でwavファイルを鳴らすプログラム。
+AVRマイコンでwavファイルを鳴らすプログラム。
 
 AVR Studioで作りました。
 
