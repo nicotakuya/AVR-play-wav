@@ -1,0 +1,114 @@
+//convert wav file to txt file for HSP3
+//by takuya matsubara
+sdim mapdata,200*1024	//WAV file buffer
+sdim savdata,100*1024	//txt file buffer
+sdim txt,5
+sdim crlf,3
+
+dsthz=8000.0	//output freq[hz]
+codelimit=12000		//output dara max size[bytes]
+
+screen 0,1024,700:cls 4
+color 255,255,255
+
+dialog "wav",16,"file"
+if(stat!=1):end
+bload refstr,mapdata	//open wav data
+totalsize = strsize
+
+ptr = 0
+gosub *gettxt         :print "[RIFF]: "+txt
+if (txt != "RIFF"):dialog "format error:this file is not WAV format":end
+gosub *atol:filesize=a:print "file size: "+str(a)
+gosub *gettxt         :print "[WAVE]: "+txt
+gosub *gettxt         :print "[fmt ]: "+txt
+gosub *atol:fmtsize=a :print "fmt size: "+str(a)
+gosub *atow:fmtid=a   :print "fmt id: "+str(a)
+gosub *atow:channel=a :print "channel: "+str(a)
+gosub *atol:srchz=a   :print "sample rate: "+str(a)+" Hz"
+gosub *atol:bps=a     :print "byte/s: "+str(a)
+gosub *atow:blocksize=a:print "blocksize: "+str(a)
+gosub *atow:databit=a :print "data bit: "+str(a)
+if (databit != 8):dialog "format error:data format is not 8bit":end
+gosub *gettxt         :print "[data]: "+txt
+gosub *atol:datalen=a :print "data length: "+str(a)
+
+poke crlf,0,13
+poke crlf,1,10
+poke crlf,2,0
+gx=200.0:gy=16.0:gw=800.0:gh=256.0
+codebyte=0
+srctime=0.0
+dsttime=0.0
+bytecnt=0
+trigger=0
+color 32,32,32
+x1=gx:y1=gy:x2=gx+gw:y2=gy+gh
+boxf x1,y1,x2,y2
+x1=gx:y1=gy+gy+gh:x2=gx+gw:y2=gy+gh+gy+gh
+boxf x1,y1,x2,y2
+
+savdata="const unsigned char wavdat[] PROGMEM ={"+crlf
+redraw 0
+color 0,255,0
+repeat
+	if (bytecnt>=datalen):break
+	if (codebyte>=codelimit):break
+	x=gx+(gw*bytecnt/datalen)
+	datal=peek(mapdata,ptr):ptr++
+	bytecnt++
+	pset x,gy+datal
+	if(channel==2){		//STEREO
+		datar=peek(mapdata,ptr):ptr++
+		bytecnt++
+		pset x,gy+gy+gh+datar
+	}
+	if(trigger==0){
+		if (abs(datal-128) > 8){ //threshold
+			trigger=1
+			color 255,0,0
+		}
+	}
+	srctime += (1.0/srchz)
+	if(dsttime<=srctime){
+		dsttime += (1.0/dsthz)
+		if(trigger){
+			if(codebyte>0):savdata += ","
+			savdata=savdata + "0x"+ strf("%02x",datal)
+			if((codebyte \ 16)==15):savdata +=crlf
+			codebyte++
+		}
+	}
+	if((bytecnt \ 1000)==0){
+		redraw 1
+		wait 1
+		redraw 0
+	}
+	title "read "+str(bytecnt)+"bytes/"+str(datalen)+" :"+" write "+str(codebyte)+"bytes"
+loop
+redraw 1
+savdata=savdata + "};"+crlf
+dialog "txt",17
+if stat==0 :end
+bsave refstr,savdata,strlen(savdata)
+end
+//-------text
+*gettxt
+poke txt,0,peek(mapdata,ptr):	ptr++
+poke txt,1,peek(mapdata,ptr):	ptr++
+poke txt,2,peek(mapdata,ptr):	ptr++
+poke txt,3,peek(mapdata,ptr):	ptr++
+poke txt,4,0
+return
+//-------long
+*atol
+a = peek(mapdata,ptr) :	ptr++
+a += (peek(mapdata,ptr) << 8):	ptr++
+a += (peek(mapdata,ptr) << 16):	ptr++
+a += (peek(mapdata,ptr) << 24):	ptr++
+return
+//-------word
+*atow
+a = peek(mapdata,ptr) :	ptr++
+a += (peek(mapdata,ptr) << 8):	ptr++
+return
