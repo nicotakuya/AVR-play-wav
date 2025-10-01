@@ -1,10 +1,17 @@
 # AVR play wav
-
+## Overview
 AVRマイコンでwavファイルを鳴らすプログラム。
 
 「いらっしゃいませ」と喋ります。
 
-Atmel Studio 6.2で作りました。
+## Files
+converter : wavファイルを変換するツール。
+
+playwav : ソース
+
+playwav.atsln : Atmel Studio 6.2用プロジェクトファイル。 
+
+playwav_schematics.png : 回路図。
 
 # Parts
 ・ATmega168/328P
